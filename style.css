@@ -21,3 +21,79 @@ body.light{--bg:#eef0fa;--text:#171b31;--muted:#606985;--line:rgba(26,34,66,.13)
 @media(max-width:420px){.topbar .crumb{font-size:7px}.topbar h2{font-size:15px}.search{width:34vw}.hero h1{font-size:37px}.hero-content>p{max-width:240px}.hero-foot span:last-child{display:none}.stat-card span{font-size:7px}.stat-card small{font-size:8px}.player{grid-template-columns:1fr}.player-center{display:none}.app{padding-bottom:145px}.sidebar{height:62px}.player{bottom:62px}.visualizer-dock{bottom:144px}}
 
 .profile-photo-editor{display:flex;align-items:center;gap:15px;padding:15px;border:1px solid var(--line);border-radius:15px;background:#ffffff08;margin:15px 0}.profile-photo-large{width:76px;height:76px;flex-shrink:0;font-size:22px}.profile-photo-editor>div{min-width:0}.profile-photo-editor b,.profile-photo-editor small{display:block}.profile-photo-editor b{font-size:13px}.profile-photo-editor small{font-size:10px;color:var(--muted);margin-top:4px}.profile-photo-actions{display:flex;align-items:center;gap:12px;margin-top:10px}.profile-photo-actions .text-button{font-size:10px}
+
+
+/* =====================================
+   AURASTREAM VIDEO FULLSCREEN
+===================================== */
+
+/* Normal video player */
+#media {
+    position: fixed;
+    z-index: 9999;
+    right: 15px;
+    bottom: 110px;
+    width: min(420px, 90vw);
+    height: auto;
+    max-height: 80vh;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    background: #000;
+    border-radius: 12px;
+    box-shadow: 0 0 25px #000;
+}
+
+/* Fullscreen video */
+#media:fullscreen,
+#media:-webkit-full-screen {
+    position: fixed;
+    inset: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw;
+    max-height: 100vh;
+    aspect-ratio: auto;
+    object-fit: contain;
+    border-radius: 0;
+    background: #000;
+    z-index: 99999;
+}
+
+/* Mobile fullscreen */
+@media (max-width: 768px) {
+    #media:fullscreen,
+    #media:-webkit-full-screen {
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-width: 100vw;
+        max-height: 100dvh;
+        inset: 0;
+        object-fit: contain;
+    }
+}
+
+/* Landscape orientation */
+@media screen and (orientation: landscape) {
+    #media:fullscreen,
+    #media:-webkit-full-screen {
+        width: 100vw !important;
+        height: 100dvh !important;
+        object-fit: contain;
+    }
+}
+
+/* Portrait orientation */
+@media screen and (orientation: portrait) {
+    #media:fullscreen,
+    #media:-webkit-full-screen {
+        width: 100vw !important;
+        height: 100dvh !important;
+        object-fit: contain;
+    }
+}
+
+/* Hide other app elements during fullscreen */
+body:has(#media:fullscreen),
+body:has(#media:-webkit-full-screen) {
+    overflow: hidden;
+}
