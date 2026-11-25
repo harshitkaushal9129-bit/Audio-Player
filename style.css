@@ -23,77 +23,145 @@ body.light{--bg:#eef0fa;--text:#171b31;--muted:#606985;--line:rgba(26,34,66,.13)
 .profile-photo-editor{display:flex;align-items:center;gap:15px;padding:15px;border:1px solid var(--line);border-radius:15px;background:#ffffff08;margin:15px 0}.profile-photo-large{width:76px;height:76px;flex-shrink:0;font-size:22px}.profile-photo-editor>div{min-width:0}.profile-photo-editor b,.profile-photo-editor small{display:block}.profile-photo-editor b{font-size:13px}.profile-photo-editor small{font-size:10px;color:var(--muted);margin-top:4px}.profile-photo-actions{display:flex;align-items:center;gap:12px;margin-top:10px}.profile-photo-actions .text-button{font-size:10px}
 
 
-/* =====================================
-   AURASTREAM VIDEO FULLSCREEN
-===================================== */
+/* ======================================
+   AURASTREAM FLOATING VIDEO STAGE
+====================================== */
 
-/* Normal video player */
-#media {
+#videoStage {
     position: fixed;
-    z-index: 9999;
-    right: 15px;
+    z-index: 9998;
+    right: 20px;
     bottom: 110px;
-    width: min(420px, 90vw);
-    height: auto;
-    max-height: 80vh;
-    aspect-ratio: 16 / 9;
-    object-fit: contain;
+    width: min(650px, 90vw);
+    height: min(370px, 65vh);
     background: #000;
-    border-radius: 12px;
-    box-shadow: 0 0 25px #000;
+    border-radius: 14px;
+    overflow: hidden;
+    display: none;
+    box-shadow: 0 10px 40px #0009;
 }
 
-/* Fullscreen video */
-#media:fullscreen,
-#media:-webkit-full-screen {
+#videoStage video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #000;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* Video controls overlay */
+
+#videoOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s ease, visibility .25s;
+    background: linear-gradient(
+        to bottom,
+        #0009,
+        transparent 30%,
+        transparent 55%,
+        #000b
+    );
+    z-index: 5;
+    pointer-events: none;
+}
+
+#videoStage.controls-visible #videoOverlay {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.video-top-controls,
+.video-bottom-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.video-control-group {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+#videoOverlay button,
+#videoOverlay select {
+    color: white;
+    background: #171717bb;
+    border: 1px solid #ffffff35;
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+#videoOverlay button:hover {
+    background: #8066e8;
+}
+
+#videoOverlay select {
+    max-width: 125px;
+}
+
+#videoSeek {
+    width: 100%;
+    accent-color: #a99aff;
+    cursor: pointer;
+}
+
+.video-time {
+    color: white;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+#videoStage:fullscreen,
+#videoStage:-webkit-full-screen {
     position: fixed;
     inset: 0;
     width: 100vw !important;
     height: 100vh !important;
-    max-width: 100vw;
-    max-height: 100vh;
-    aspect-ratio: auto;
-    object-fit: contain;
+    height: 100dvh !important;
+    max-width: none;
+    max-height: none;
     border-radius: 0;
-    background: #000;
-    z-index: 99999;
+    z-index: 999999;
 }
 
-/* Mobile fullscreen */
-@media (max-width: 768px) {
-    #media:fullscreen,
-    #media:-webkit-full-screen {
-        width: 100vw !important;
-        height: 100dvh !important;
-        max-width: 100vw;
-        max-height: 100dvh;
-        inset: 0;
-        object-fit: contain;
+#videoStage:fullscreen video,
+#videoStage:-webkit-full-screen video {
+    width: 100%;
+    height: 100%;
+}
+
+/* Responsive mobile controls */
+
+@media(max-width:768px) {
+    #videoStage {
+        width: 92vw;
+        height: 52vw;
+        max-height: 65vh;
+        right: 4vw;
+        bottom: 100px;
     }
-}
 
-/* Landscape orientation */
-@media screen and (orientation: landscape) {
-    #media:fullscreen,
-    #media:-webkit-full-screen {
-        width: 100vw !important;
-        height: 100dvh !important;
-        object-fit: contain;
+    #videoOverlay {
+        padding: 7px;
     }
-}
 
-/* Portrait orientation */
-@media screen and (orientation: portrait) {
-    #media:fullscreen,
-    #media:-webkit-full-screen {
-        width: 100vw !important;
-        height: 100dvh !important;
-        object-fit: contain;
+    #videoOverlay button,
+    #videoOverlay select {
+        padding: 6px;
+        font-size: 11px;
     }
-}
-
-/* Hide other app elements during fullscreen */
-body:has(#media:fullscreen),
-body:has(#media:-webkit-full-screen) {
-    overflow: hidden;
 }
