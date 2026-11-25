@@ -21,3 +21,21 @@ body.light{--bg:#eef0fa;--text:#171b31;--muted:#606985;--line:rgba(26,34,66,.13)
 @media(max-width:420px){.topbar .crumb{font-size:7px}.topbar h2{font-size:15px}.search{width:34vw}.hero h1{font-size:37px}.hero-content>p{max-width:240px}.hero-foot span:last-child{display:none}.stat-card span{font-size:7px}.stat-card small{font-size:8px}.player{grid-template-columns:1fr}.player-center{display:none}.app{padding-bottom:145px}.sidebar{height:62px}.player{bottom:62px}.visualizer-dock{bottom:144px}}
 
 .profile-photo-editor{display:flex;align-items:center;gap:15px;padding:15px;border:1px solid var(--line);border-radius:15px;background:#ffffff08;margin:15px 0}.profile-photo-large{width:76px;height:76px;flex-shrink:0;font-size:22px}.profile-photo-editor>div{min-width:0}.profile-photo-editor b,.profile-photo-editor small{display:block}.profile-photo-editor b{font-size:13px}.profile-photo-editor small{font-size:10px;color:var(--muted);margin-top:4px}.profile-photo-actions{display:flex;align-items:center;gap:12px;margin-top:10px}.profile-photo-actions .text-button{font-size:10px}
+
+
+/* AuraStream video player: hover-only controls */
+#videoStage{position:fixed;z-index:999;right:20px;bottom:110px;width:min(560px,68vw);height:min(315px,45vh);background:#05070d;border:1px solid #ffffff20;border-radius:14px;overflow:hidden;box-shadow:0 12px 40px #0009}
+#videoStage #media{position:relative!important;inset:auto!important;display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain;object-position:center;border:0!important;border-radius:0!important;box-shadow:none!important;background:#05070d}
+#videoOverlay{position:absolute;inset:0;z-index:2;display:flex;flex-wrap:wrap;align-content:flex-end;align-items:center;gap:7px;padding:12px;background:linear-gradient(transparent 35%,#000d 100%);opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s ease;pointer-events:none}
+#videoStage:hover #videoOverlay,#videoStage.controls-on #videoOverlay,#videoStage:focus-within #videoOverlay{opacity:1;visibility:visible;pointer-events:auto}
+#videoOverlay button,#videoOverlay select{min-height:32px;padding:6px 9px;border:1px solid #ffffff35;border-radius:8px;background:#171b2beF;color:#f4f5ff;font:600 12px/1.2 Arial,sans-serif;cursor:pointer;outline:none}
+#videoOverlay button{min-width:34px;font-size:14px}
+#videoOverlay button:hover,#videoOverlay select:hover{background:#39335f;border-color:#a99aff}
+#videoOverlay button:focus-visible,#videoOverlay select:focus-visible,#videoOverlay input:focus-visible{outline:2px solid #a99aff;outline-offset:2px}
+#videoOverlay input[type=range]{flex:1 1 100px;min-width:70px;height:18px;margin:0 2px;accent-color:#9b8cff;cursor:pointer}
+#videoOverlay #vTime{min-width:76px;font-size:10px;font-variant-numeric:tabular-nums}
+#videoOverlay select{max-width:112px}
+#videoStage:fullscreen{inset:0!important;width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;border:0;border-radius:0}
+#videoStage:fullscreen #media{width:100%!important;height:100%!important}
+#videoStage:fullscreen #videoOverlay{padding:18px}
+@media(max-width:600px){#videoStage{right:8px!important;bottom:100px!important;width:calc(100vw - 16px)!important;height:auto!important;aspect-ratio:16/9}#videoOverlay{gap:5px;padding:8px}#videoOverlay button,#videoOverlay select{min-height:29px;padding:5px 7px;font-size:11px}#videoOverlay select{max-width:92px}#videoOverlay #vTime{min-width:68px}}
