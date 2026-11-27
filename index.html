@@ -57,10 +57,26 @@
     <header class="topbar">
       <div><div class="crumb">AURASTREAM <span>/</span> <b id="crumb">HOME</b></div><h2 id="pageTitle">Your universe</h2></div>
       <div class="top-actions">
+        <div class="datetime-pill" id="liveClock" aria-live="polite" title="Current date and time">
+          <span class="dt-date" id="liveDate">--</span>
+          <span class="dt-time" id="liveTime">--:--:--</span>
+        </div>
         <label class="search"><span>⌕</span><input id="searchInput" placeholder="Search tracks, videos, playlists…" autocomplete="off"><kbd>/</kbd></label>
+        <button class="icon-btn" id="headerPhotoBtn" title="Change user picture" aria-label="Change user picture">📷</button>
         <button class="icon-btn" id="themeBtn" title="Toggle theme">◐</button>
         <button class="icon-btn hidden" id="installBtn" title="Install AuraStream">⇩</button>
-        <button class="avatar" id="topAvatar">A</button>
+        <button class="avatar" id="topAvatar" title="Open profile">A</button>
+        <div class="more-menu-wrap">
+          <button class="icon-btn" id="moreMenuBtn" title="More options" aria-label="More options" aria-haspopup="true" aria-expanded="false">⋮</button>
+          <div class="more-menu hidden" id="moreMenu" role="menu">
+            <button type="button" class="more-menu-item" id="menuChangePic" role="menuitem">📷 Change user picture</button>
+            <button type="button" class="more-menu-item" id="menuAppInfo" role="menuitem">⚡ App &amp; Developer Info</button>
+            <button type="button" class="more-menu-item" id="menuTheme" role="menuitem">◐ Toggle Theme</button>
+            <button type="button" class="more-menu-item hidden" id="menuInstall" role="menuitem">⇩ Install App</button>
+            <div class="more-menu-sep"></div>
+            <button type="button" class="more-menu-item danger" id="menuSignOut" role="menuitem">⎋ Sign out</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -144,5 +160,6 @@
 <div class="toast" id="toast" role="status"></div>
 <input id="fileInput" type="file" accept="*/*" multiple hidden>
 <input id="folderInput" type="file" accept="*/*" webkitdirectory directory multiple hidden>
+<input id="quickAvatarInput" type="file" accept="image/*" hidden>
 <script src="script.js"></script>
 </body></html>
