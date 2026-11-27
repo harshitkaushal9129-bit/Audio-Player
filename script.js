@@ -12,31 +12,13 @@ videoStage.innerHTML=`
     <div class="video-controls">
       <div class="video-seek-row"><span id="vElapsed">0:00</span><input id="vSeek" type="range" min="0" max="1000" value="0" aria-label="Seek video"><span id="vDuration">0:00</span></div>
       <div class="video-control-row">
-        <div class="video-control-group">
-          <button id="vPrev" class="v-control-btn" title="Previous video" aria-label="Previous video">|◀</button>
-          <button id="vBack10" class="v-control-btn v-skip-btn" title="Rewind 10 seconds" aria-label="Rewind 10 seconds">↺ 10s</button>
-          <button id="vPlay" class="v-play-btn" title="Play/Pause" aria-label="Play or pause">▶</button>
-          <button id="vFwd10" class="v-control-btn v-skip-btn" title="Forward 10 seconds" aria-label="Forward 10 seconds">10s ↻</button>
-          <button id="vNext" class="v-control-btn" title="Next video" aria-label="Next video">▶|</button>
-        </div>
+        <div class="video-control-group"><button id="vPrev" class="v-control-btn" title="Previous video">|◀</button><button id="vPlay" class="v-play-btn" title="Play/Pause">▶</button><button id="vNext" class="v-control-btn" title="Next video">▶|</button></div>
         <div class="video-control-group video-control-tools"><button id="vMute" class="v-control-btn" title="Mute">🔊</button><input id="vVolume" type="range" min="0" max="1" step=".01" value=".8" aria-label="Volume"><label class="v-speed-label">Speed <select id="vSpeed"><option value=".5">0.5×</option><option value=".75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><button id="vRotate" class="v-control-btn" title="Rotate video">↻</button><button id="vPip" class="v-control-btn" title="Picture in picture">▣</button><button id="vFull" class="v-control-btn" title="Fullscreen">⛶</button></div>
       </div>
     </div>
   </div>`;
 document.body.append(videoStage);const videoScreen=$('videoScreen');videoScreen.append(media);
 let videoRotation=0;
-function seekVideoBy(deltaSec){
-  if(!media.src)return;
-  const dur=Number.isFinite(media.duration)?media.duration:Infinity;
-  media.currentTime=Math.max(0,Math.min(dur,(media.currentTime||0)+deltaSec));
-  if(Number.isFinite(media.duration)){
-    $('vSeek').value=String((media.currentTime/media.duration)*1000);
-    $('vElapsed').textContent=clock(media.currentTime);
-  }
-  toast(deltaSec<0?`Rewound ${Math.abs(deltaSec)}s`:`Skipped forward ${deltaSec}s`);
-}
-$('vBack10').onclick=()=>seekVideoBy(-10);
-$('vFwd10').onclick=()=>seekVideoBy(10);
 $('vPlay').onclick=()=>media.paused?media.play().catch(()=>toast('Could not play this video')):media.pause();
 media.addEventListener('play',()=>$('vPlay').textContent='Ⅱ');media.addEventListener('pause',()=>$('vPlay').textContent='▶');
 $('vSeek').oninput=()=>{if(Number.isFinite(media.duration))media.currentTime=Number($('vSeek').value)/1000*media.duration};
@@ -58,64 +40,10 @@ const clock=n=>Number.isFinite(n)?`${Math.floor(n/60)}:${String(Math.floor(n%60)
 const fmtTime=s=>s<60?`${Math.round(s)}s`:s<3600?`${Math.floor(s/60)}m`:`${(s/3600).toFixed(1)}h`;
 const safe=(s='')=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(s){const t=$('toast');t.textContent=s;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2400)}
-
-// Live date & time in header
-function updateClock(){
-  const now=new Date();
-  const dEl=$('liveDate'),tEl=$('liveTime');
-  if(dEl)dEl.textContent=now.toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'});
-  if(tEl)tEl.textContent=now.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-updateClock();
-setInterval(updateClock,1000);
-
 function getUsers(){try{return JSON.parse(localStorage.getItem(DB)||'{}')}catch{return{}}}
 function saveUsers(x){localStorage.setItem(DB,JSON.stringify(x))}
 function paintAvatar(el,profile){if(!el||!profile)return;el.textContent=profile.avatar?'':(profile.name||'A').slice(0,1).toUpperCase();el.style.backgroundImage=profile.avatar?`url("${profile.avatar}")`:'';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.style.backgroundColor=profile.avatar?'transparent':''}
 function makeAvatarData(file){return new Promise((resolve,reject)=>{if(!file||!file.type.startsWith('image/'))return reject(new Error('Please choose an image file.'));const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read this image.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('This image could not be opened.'));img.onload=()=>{const canvas=document.createElement('canvas'),size=256,scale=Math.min(size/img.width,size/img.height);canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',.82))};img.src=reader.result};reader.readAsDataURL(file)})}
-async function applyNewAvatar(file){
-  if(!user||!file)return;
-  const dataUrl=await makeAvatarData(file);
-  user.avatar=dataUrl;
-  const u=getUsers();
-  if(u[user.email]){u[user.email].avatar=dataUrl;saveUsers(u)}
-  paintAvatar($('sideAvatar'),user);
-  paintAvatar($('topAvatar'),user);
-  if($('profilePreview'))paintAvatar($('profilePreview'),user);
-  toast('Profile picture updated');
-}
-$('headerPhotoBtn').onclick=()=>$('quickAvatarInput').click();
-$('quickAvatarInput').onchange=async e=>{
-  const file=e.target.files?.[0];
-  if(!file)return;
-  try{await applyNewAvatar(file)}catch(err){toast(err.message||'Could not update picture')}
-  e.target.value='';
-};
-
-// Header 3-dots menu
-const moreMenu=$('moreMenu'),moreMenuBtn=$('moreMenuBtn');
-function closeMoreMenu(){moreMenu.classList.add('hidden');moreMenuBtn.setAttribute('aria-expanded','false')}
-moreMenuBtn.onclick=e=>{
-  e.stopPropagation();
-  const willOpen=moreMenu.classList.contains('hidden');
-  moreMenu.classList.toggle('hidden',!willOpen);
-  moreMenuBtn.setAttribute('aria-expanded',String(willOpen));
-};
-document.addEventListener('click',e=>{
-  if(!moreMenu.classList.contains('hidden')&&!moreMenu.contains(e.target)&&e.target!==moreMenuBtn)closeMoreMenu();
-});
-$('menuChangePic').onclick=()=>{closeMoreMenu();$('quickAvatarInput').click()};
-$('menuTheme').onclick=()=>{closeMoreMenu();$('themeBtn').click()};
-$('menuInstall').onclick=()=>{closeMoreMenu();$('installBtn').click()};
-$('menuSignOut').onclick=()=>{closeMoreMenu();media.pause();localStorage.removeItem(SESSION);location.reload()};
-$('menuAppInfo').onclick=()=>{
-  closeMoreMenu();
-  const now=new Date();
-  showModal(`<h2>⚡ App &amp; Profile Info</h2><p class="muted">AuraStream Legendary — local browser media workspace.</p><div class="profile-list"><div class="profile-option"><span>👤</span><span><b>${safe(user?.name||'Guest')}</b><small>${safe(user?.email||'Local session')}</small></span></div><div class="profile-option"><span>🕒</span><span><b>${safe(now.toLocaleDateString())} · ${safe(now.toLocaleTimeString())}</b><small>Current local date &amp; time</small></span></div></div><div class="modal-actions"><button class="btn-glass" id="infoManageProfile">Manage profile</button><button class="btn-primary" id="infoClose">Close</button></div>`);
-  $('infoManageProfile').onclick=()=>{closeModal();openProfiles()};
-  $('infoClose').onclick=closeModal;
-};
-
 async function hashPassword(password,salt){const data=new TextEncoder().encode(password+salt);if(crypto.subtle){const key=await crypto.subtle.importKey('raw',data,'PBKDF2',false,['deriveBits']);const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:100000,hash:'SHA-256'},key,256);return [...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,'0')).join('')}return btoa(unescape(encodeURIComponent(password+salt)))}
 function setAuthMode(m){authMode=m;document.querySelectorAll('.auth-tab').forEach(b=>b.classList.toggle('active',b.dataset.auth===m));$('nameWrap').classList.toggle('hidden',m!=='register');$('authName').required=m==='register';$('authPassword').autocomplete=m==='register'?'new-password':'current-password';$('authSubmit').innerHTML=m==='register'?'Create my profile <span>↗</span>':'Enter AuraStream <span>↗</span>';$('authError').textContent=''}
 document.querySelectorAll('.auth-tab').forEach(b=>b.onclick=()=>setAuthMode(b.dataset.auth));
@@ -179,13 +107,79 @@ function updateStorage(){if(navigator.storage?.estimate){navigator.storage.estim
 function drawAnalytics(){const a=analytics(),counts=a.counts||{},top=Object.entries(counts).sort((x,y)=>y[1]-x[1]).slice(0,6);$('anPlays').textContent=a.plays||0;$('anTime').textContent=fmtTime(a.seconds||0);$('anCount').textContent=library.length;const topItem=library.find(x=>x.id===top[0]?.[0]);$('anTop').textContent=topItem?topItem.name.replace(/\.[^.]+$/,''):'—';const list=$('topTracks');list.replaceChildren();top.forEach(([id,n],i)=>{const x=library.find(m=>m.id===id);if(!x)return;const row=document.createElement('div');row.className='rank-item';row.innerHTML=`<span class="rank-num">${i+1}</span><span class="rank-copy"><b>${safe(x.name)}</b><small>${x.type.toUpperCase()}</small></span><span class="rank-count">${n} plays</span>`;list.append(row)});if(!top.length)list.innerHTML='<p class="muted">Play something to see your top tracks.</p>';const canvas=$('activityChart'),ctx=canvas.getContext('2d'),dpr=window.devicePixelRatio||1,w=canvas.clientWidth||600,h=220;canvas.width=w*dpr;canvas.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);const days=Array.from({length:7},(_,i)=>{const date=new Date();date.setHours(0,0,0,0);date.setDate(date.getDate()-(6-i));return date});const vals=days.map(d=>a.history.filter(x=>new Date(x.at).toDateString()===d.toDateString()).reduce((s,x)=>s+(x.seconds||0),0));const max=Math.max(60,...vals),gap=14,bw=(w-gap*6-24)/7;days.forEach((d,i)=>{const x=12+i*(bw+gap),barH=(vals[i]/max)*(h-55);ctx.fillStyle='#252b4b';ctx.beginPath();ctx.roundRect(x, h-30-(h-55),bw,h-55,6);ctx.fill();const grad=ctx.createLinearGradient(0,h-30-barH,0,h-30);grad.addColorStop(0,'#b3a5ff');grad.addColorStop(1,'#63dfd7');ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect(x,h-30-barH,bw,Math.max(3,barH),6);ctx.fill();ctx.fillStyle='#8792b1';ctx.font='10px DM Sans';ctx.textAlign='center';ctx.fillText(['S','M','T','W','T','F','S'][d.getDay()],x+bw/2,h-10)})}
 $('resetAnalytics').onclick=()=>{if(confirm('Reset playback analytics for this profile?')){localStorage.removeItem('aurastream_stats_'+profileKey());drawAnalytics();renderAll();toast('Analytics reset')}};
 $('profileButton').onclick=$('topAvatar').onclick=()=>openProfiles();
-function openProfiles(){const users=getUsers();showModal(`<h2>User profile</h2><p class="muted">Personalize your AuraStream profile. Your picture is stored only in this browser.</p><div class="profile-photo-editor"><span class="avatar profile-photo-large" id="profilePreview">A</span><div><b>${safe(user.name)}</b><small>Profile picture</small><div class="profile-photo-actions"><button class="btn-glass" id="changeProfilePhoto">Change picture</button><button class="text-button" id="removeProfilePhoto">Remove</button></div></div></div><input type="file" id="profilePhotoFile" accept="image/*" hidden><div class="profile-list" id="profileList"></div><label>Display name<input id="editProfileName" value="${safe(user.name)}"></label><div class="modal-actions"><button class="btn-primary" id="saveProfile">Save profile</button><button class="btn-glass" id="exportBackup">Export backup</button><button class="btn-glass" id="importBackup">Import backup</button><button class="danger-btn" id="logout">Sign out</button></div><input type="file" id="backupFile" accept="application/json" hidden>`);paintAvatar($('profilePreview'),user);$('changeProfilePhoto').onclick=()=>$('profilePhotoFile').click();$('profilePhotoFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{await applyNewAvatar(file)}catch(err){toast(err.message||'Could not update picture')}e.target.value=''};$('removeProfilePhoto').onclick=()=>{delete user.avatar;const u=getUsers();delete u[user.email].avatar;saveUsers(u);paintAvatar($('profilePreview'),user);paintAvatar($('sideAvatar'),user);paintAvatar($('topAvatar'),user);toast('Profile picture removed')};Object.values(users).forEach(p=>{const b=document.createElement('button');b.className='profile-option';const av=document.createElement('span');av.className='avatar';paintAvatar(av,p);const copy=document.createElement('span');copy.innerHTML=`${safe(p.name)}<small>${safe(p.email)}</small>`;b.append(av,copy);b.onclick=()=>{if(p.email===user.email){closeModal();return}localStorage.setItem(SESSION,p.email);location.reload()};$('profileList').append(b)});$('saveProfile').onclick=()=>{const u=getUsers();u[user.email].name=$('editProfileName').value.trim()||user.name;u[user.email].avatar=user.avatar||'';saveUsers(u);user=u[user.email];closeModal();boot(user);toast('Profile updated')};$('logout').onclick=()=>{media.pause();localStorage.removeItem(SESSION);location.reload()};$('exportBackup').onclick=exportBackup;$('importBackup').onclick=()=>$('backupFile').click();$('backupFile').onchange=e=>importBackup(e.target.files[0])}
+function openProfiles(){const users=getUsers();showModal(`<h2>User profile</h2><p class="muted">Personalize your AuraStream profile. Your picture is stored only in this browser.</p><div class="profile-photo-editor"><span class="avatar profile-photo-large" id="profilePreview">A</span><div><b>${safe(user.name)}</b><small>Profile picture</small><div class="profile-photo-actions"><button class="btn-glass" id="changeProfilePhoto">Change picture</button><button class="text-button" id="removeProfilePhoto">Remove</button></div></div></div><input type="file" id="profilePhotoFile" accept="image/*" hidden><div class="profile-list" id="profileList"></div><label>Display name<input id="editProfileName" value="${safe(user.name)}"></label><div class="modal-actions"><button class="btn-primary" id="saveProfile">Save profile</button><button class="btn-glass" id="exportBackup">Export backup</button><button class="btn-glass" id="importBackup">Import backup</button><button class="danger-btn" id="logout">Sign out</button></div><input type="file" id="backupFile" accept="application/json" hidden>`);paintAvatar($('profilePreview'),user);$('changeProfilePhoto').onclick=()=>$('profilePhotoFile').click();$('profilePhotoFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{user.avatar=await makeAvatarData(file);const u=getUsers();u[user.email].avatar=user.avatar;saveUsers(u);paintAvatar($('profilePreview'),user);paintAvatar($('sideAvatar'),user);paintAvatar($('topAvatar'),user);toast('Profile picture updated')}catch(err){toast(err.message||'Could not update picture')}e.target.value=''};$('removeProfilePhoto').onclick=()=>{delete user.avatar;const u=getUsers();delete u[user.email].avatar;saveUsers(u);paintAvatar($('profilePreview'),user);paintAvatar($('sideAvatar'),user);paintAvatar($('topAvatar'),user);toast('Profile picture removed')};Object.values(users).forEach(p=>{const b=document.createElement('button');b.className='profile-option';const av=document.createElement('span');av.className='avatar';paintAvatar(av,p);const copy=document.createElement('span');copy.innerHTML=`${safe(p.name)}<small>${safe(p.email)}</small>`;b.append(av,copy);b.onclick=()=>{if(p.email===user.email){closeModal();return}localStorage.setItem(SESSION,p.email);location.reload()};$('profileList').append(b)});$('saveProfile').onclick=()=>{const u=getUsers();u[user.email].name=$('editProfileName').value.trim()||user.name;u[user.email].avatar=user.avatar||'';saveUsers(u);user=u[user.email];closeModal();boot(user);toast('Profile updated')};$('logout').onclick=()=>{media.pause();localStorage.removeItem(SESSION);location.reload()};$('exportBackup').onclick=exportBackup;$('importBackup').onclick=()=>$('backupFile').click();$('backupFile').onchange=e=>importBackup(e.target.files[0])}
 async function exportBackup(){const backup={version:1,profile:{email:user.email,name:user.name},playlists,analytics:analytics(),media:library.map(({id,name,path,size,type,added,favorite,plays,progress,watchedSeconds,notes})=>({id,name,path,size,type,added,favorite,plays,progress,watchedSeconds,notes}))};const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});downloadBlob(blob,'aurastream-backup.json');toast('Backup list exported (media files are not embedded)')}
 async function importBackup(file){if(!file)return;try{const data=JSON.parse(await file.text());if(data.playlists){playlists=data.playlists;savePlaylists()}if(data.analytics)saveAnalytics(data.analytics);renderAll();closeModal();toast('Backup metadata imported. Re-import original media files separately.')}catch{toast('Invalid backup file')}}
 function downloadBlob(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)}
+
+// Quick Actions menu (added without replacing existing profile/player controls).
+$('quickActionsBtn').onclick=()=>{
+  showModal(`<div class="quick-actions-head"><h2>📌 QUICK ACTIONS</h2><button class="quick-close" id="quickActionsClose" aria-label="Close">×</button></div>
+    <div class="quick-actions-list">
+      <button class="quick-action-option" id="quickAppInfo"><span>⚡</span> App Info</button>
+      <button class="quick-action-option" id="quickDeveloperInfo"><span>💻</span> Developer Info</button>
+      <button class="quick-action-option" id="quickInstallApp"><span>📲</span> Install App</button>
+      <button class="quick-action-option" id="quickSharePortal"><span>🔗</span> Share Portal</button>
+    </div>`);
+  $('quickActionsClose').onclick=closeModal;
+  $('quickAppInfo').onclick=()=>{
+    showModal(`<h2>⚡ App Info</h2><p class="muted"><b>AuraStream</b> — Your personal media space.</p>
+      <div class="profile-list"><div class="profile-option"><span class="avatar">♫</span><span>Audio & video player<small>Play and organize your media</small></span></div>
+      <div class="profile-option"><span class="avatar">▤</span><span>Media library<small>Favorites, playlists and playback analytics</small></span></div>
+      <div class="profile-option"><span class="avatar">◐</span><span>Personalization<small>Profiles and light/dark themes</small></span></div></div>
+      <div class="modal-actions"><button class="btn-glass" id="backQuickActions">Back</button></div>`);
+    $('backQuickActions').onclick=$('quickActionsBtn').onclick;
+  };
+  $('quickDeveloperInfo').onclick=()=>{
+    showModal(`<section class="developer-profile">
+      <header class="developer-profile-head"><h2>💻 DEVELOPER PROFILE</h2><button class="developer-profile-close" id="developerProfileClose" aria-label="Close">×</button></header>
+      <div class="developer-profile-body">
+        <div class="developer-identity"><img class="developer-avatar" src="developer-avatar.jpg" alt="Developer profile photo"><div class="developer-identity-copy"><h3>kaushalji</h3><strong>Full Stack Web Developer &amp; Tech Educator</strong><p>Senior Trainer @ SNT Computer Institute</p></div></div>
+        <p class="developer-bio">Passionate web developer and computer instructor dedicated to training students in IT, modern web technologies, and practical accounting systems.</p>
+        <h4 class="developer-section-title">🎓 ACADEMIC &amp; TECHNICAL CREDENTIALS</h4>
+        <div class="developer-credentials">
+          <div class="developer-credential"><span>High School (10th)</span><b class="green">86% Marks</b></div>
+          <div class="developer-credential"><span>Intermediate (12th)</span><b class="green">76% Marks</b></div>
+          <div class="developer-credential"><span>ITI Certification</span><b class="blue">COPA Trade</b></div>
+          <div class="developer-credential"><span>NIELIT Qualification</span><b class="blue">O-Level (IT)</b></div>
+        </div>
+        <div class="developer-specialization"><span>Specialization:</span><b>Tally Prime with Adv. Excel</b></div>
+        <h4 class="developer-section-title">⚡ TECHNICAL EXPERTISE</h4>
+        <div class="developer-skills"><span>HTML5 / CSS3</span><span>JavaScript, angular javascript</span><span>Python</span><span>IOT</span><span>photo editing,AI</span><span>TallyERP9, Tallyprime</span><span>MS-Office</span></div>
+        <div class="developer-socials">
+          <a class="developer-social" href="https://youtube.com/@devil_king.01r?si=3QkN826bob8v7rWs" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8ZM9.7 15.4V8.6l6 3.4-6 3.4Z"/></svg><span>YouTube</span></a>
+          <a class="developer-social" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="solid-dot" cx="17.5" cy="6.8" r="1"/></svg><span>Instagram</span></a>
+          <a class="developer-social" href="https://wa.me/919129191898" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.4-4.9a8.4 8.4 0 1 1 16.1-3.9Z"/><path d="M8.3 8.2c.3-.6.6-.6.9-.6h.5c.2 0 .4.1.5.4l.8 1.8c.1.2.1.4-.1.6l-.6.7c-.2.2-.2.4 0 .7.5.9 1.2 1.5 2.1 2 .3.2.5.2.7-.1l.8-.9c.2-.2.4-.2.7-.1l1.7.8c.3.1.4.3.4.5 0 .3-.2 1.1-.8 1.5-.5.4-1.2.6-2 .4-1.1-.2-2.5-.9-3.8-2.1-1-.9-1.7-2.1-1.9-3.1-.2-1 .1-1.8.5-2.5Z"/></svg><span>WhatsApp</span></a>
+          <a class="developer-social" href="tel:+919129191898" aria-label="Call"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 2.8 9.4 2a1.5 1.5 0 0 1 1.8.9l1.2 3a1.5 1.5 0 0 1-.4 1.7L10.4 9a15 15 0 0 0 4.6 4.6l1.4-1.6a1.5 1.5 0 0 1 1.7-.4l3 1.2a1.5 1.5 0 0 1 .9 1.8l-.8 2.8a2 2 0 0 1-2 1.5A17.2 17.2 0 0 1 3.1 4.8a2 2 0 0 1 1.5-2Z"/></svg><span>Call</span></a>
+        </div>
+      </div>
+    </section>`);
+    $('developerProfileClose').onclick=closeModal;
+  };
+  $('quickInstallApp').onclick=async()=>{
+    closeModal();
+    if(installPrompt){
+      try{installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;$('installBtn').classList.add('hidden')}
+      catch{toast('Installation prompt is unavailable')}
+    }else if(window.matchMedia('(display-mode: standalone)').matches){
+      toast('AuraStream is already installed')
+    }else{
+      toast('To install, open your browser menu and choose Install app or Add to Home screen')
+    }
+  };
+  $('quickSharePortal').onclick=async()=>{
+    const shareData={title:'AuraStream',text:'Check out AuraStream — your personal media space.',url:location.href};
+    try{
+      if(navigator.share){await navigator.share(shareData);closeModal()}
+      else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(location.href);closeModal();toast('Portal link copied')}
+      else{showModal(`<h2>🔗 Share Portal</h2><p class="muted">Copy this portal link to share AuraStream.</p><input id="portalShareUrl" value="${safe(location.href)}" readonly><div class="modal-actions"><button class="btn-primary" id="copyPortalLink">Copy link</button></div>`);$('copyPortalLink').onclick=()=>{const field=$('portalShareUrl');field.select();try{document.execCommand('copy');toast('Portal link copied')}catch{toast('Please copy the selected link')} }}
+    }catch(error){if(error?.name!=='AbortError')toast('Could not share the portal')}
+  };
+};
+
 $('themeBtn').onclick=()=>{document.body.classList.toggle('light');localStorage.setItem('aurastream_theme',document.body.classList.contains('light')?'light':'dark')};if(localStorage.getItem('aurastream_theme')==='light')document.body.classList.add('light');
-document.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select'))return;if(e.code==='Space'&&user){e.preventDefault();$('playBtn').click()}if(e.key==='/'){e.preventDefault();$('searchInput').focus()}if(e.key==='ArrowRight'&&Number.isFinite(media.duration))media.currentTime=Math.min(media.duration,media.currentTime+5);if(e.key==='ArrowLeft')media.currentTime=Math.max(0,media.currentTime-5);if(e.key==='Escape'){closeMoreMenu();closeModal()}});
+document.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select'))return;if(e.code==='Space'&&user){e.preventDefault();$('playBtn').click()}if(e.key==='/'){e.preventDefault();$('searchInput').focus()}if(e.key==='ArrowRight'&&Number.isFinite(media.duration))media.currentTime=Math.min(media.duration,media.currentTime+5);if(e.key==='ArrowLeft')media.currentTime=Math.max(0,media.currentTime-5);if(e.key==='Escape')closeModal()});
 let drag=0;document.querySelector('.main').addEventListener('dragenter',e=>{e.preventDefault();drag++;document.querySelector('.main').classList.add('dragging')});document.querySelector('.main').addEventListener('dragover',e=>e.preventDefault());document.querySelector('.main').addEventListener('dragleave',e=>{e.preventDefault();drag=Math.max(0,drag-1);if(!drag)document.querySelector('.main').classList.remove('dragging')});document.querySelector('.main').addEventListener('drop',e=>{e.preventDefault();drag=0;document.querySelector('.main').classList.remove('dragging');addFiles([...e.dataTransfer.files])});
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;$('installBtn').classList.remove('hidden');$('menuInstall').classList.remove('hidden')});$('installBtn').onclick=async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;$('installBtn').classList.add('hidden');$('menuInstall').classList.add('hidden')};window.addEventListener('appinstalled',()=>toast('AuraStream installed'));
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;$('installBtn').classList.remove('hidden')});$('installBtn').onclick=async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;$('installBtn').classList.add('hidden')};window.addEventListener('appinstalled',()=>toast('AuraStream installed'));
 const saved=localStorage.getItem(SESSION),profile=saved&&getUsers()[saved];if(profile)boot(profile);else setAuthMode('login');
 })();
